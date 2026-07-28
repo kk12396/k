@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## v1.3.1 - 2026-07-28
+
+### 系统化修 Bug 强化
+
+- 将原有基础调试规则升级为完整系统化调试流程，参考 `obra/superpowers` 的 Systematic Debugging、Root Cause Tracing 与 Verification Before Completion。
+- 新增硬规则：未完成根因调查不得直接改代码；每轮只验证一个明确假设；没有当前版本的新鲜证据不得宣称修复完成。
+- 新增“连续三次失败停止门禁”：同一问题三次修复失败后，禁止继续堆叠第4个补丁，必须提交阶段报告并复查架构、共享状态、依赖、版本和环境。
+- 新增多组件边界取证、调用链反向追踪、正常样例对比、单变量最小实验和失败测试优先规则。
+- 新增用户反馈“还是报错、又错了、别再猜”时的强制处理：停止旧猜测、汇总失败尝试、重新读取最新代码与日志、隔离无效补丁。
+- 新增 Android、PHP/MySQL、KSWEB、双/三端和 APK 加固后的专项验证清单。
+
+### 新增文件
+
+- `testing-debugging/ROOT_CAUSE_TRACING.md`：从报错位置反向追踪到最初错误输入或状态。
+- `testing-debugging/VERIFICATION_GATE.md`：没有完整构建、安装/部署和原始复现证据，不得宣布完成。
+- `testing-debugging/BUG_SESSION_REPORT.md`：连续修复失败时的证据、假设、尝试和卡点报告模板。
+- `testing-debugging/SOURCE_NOTICE.md`：上游来源和 MIT 许可说明。
+
+### 路由与自定义指令
+
+- INDEX 将所有报错、闪退、卡顿、构建/安装失败和连续修复失败强制路由至新版调试 Skill。
+- 完整个性化指令加入根因调查、单一假设、三次失败停止和验证门禁，避免 AI 反复输出未经验证的补丁。
+
 ## v1.3.0 - 2026-07-28
 
 ### 重构
