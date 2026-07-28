@@ -1,4 +1,4 @@
-# 玄忆工作室开发 Skills v1.3.0
+# 玄忆工作室开发 Skills v1.3.1
 
 一套面向正式网站、Android App、Windows 客户端、插件、后台及双端/三端项目的模块化开发规则。
 
@@ -17,22 +17,29 @@
 - `android-app`：普通 Android、AIDE/AIDE-Plus、可选云控、项目签名交付和最高可实现加固。
 - `multi-platform-contract`：双端/三端共享契约、本地优先、HTTP兼容和云控边界。
 - `security-audit`：后台凭据、客户端秘密、云控、接口、文件和 APK 加固审计。
-- `testing-debugging`：复现、根因、回归、构建和跨端测试。
+- `testing-debugging`：系统化复现、证据收集、根因反向追踪、单一假设实验、三次失败停止门禁和完成前验证。
 - `release-migration`：版本、迁移、加固、正式签名、安装升级、产物和发布检查。
 
-## v1.3.0 固定规则
+## Bug 调试入口
 
-1. 个性化指令仅保留入口、固定偏好和不可省略的交付底线；详细规范由 INDEX 按任务路由加载，避免重复和冲突。
+- [系统化修 Bug Skill](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/SKILL.md)
+- [根因反向追踪](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/ROOT_CAUSE_TRACING.md)
+- [完成前验证门禁](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/VERIFICATION_GATE.md)
+- [连续失败阶段报告模板](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/BUG_SESSION_REPORT.md)
+
+调试规则参考 `obra/superpowers` 的 Systematic Debugging、Root Cause Tracing 与 Verification Before Completion，并针对 Android、PHP/MySQL、KSWEB、APK签名/加固和双/三端联调重新编写。
+
+## v1.3.1 固定规则
+
+1. 个性化指令只保留入口、固定偏好和不可省略的交付底线；详细规范由 INDEX 按任务路由加载，避免重复和冲突。
 2. 包含网页时只问“新版还是旧版”：新版=PHP8.2+MySQL8.0；旧版=PHP7.4+MySQL5.6/5.7，并默认按安卓手机 KSWEB 测试兼容处理。
 3. 包含后台时只问“自用还是经典”：自用=`/adminsc + admincs/asd.cc`；经典=`/admin + admin/123456`。
-4. 默认不强制首次登录改密，方便多轮测试；登录页不得展示凭据，数据库只保存密码哈希。
-5. 默认兼容 HTTP 和 HTTPS，不强制证书；本地、局域网、KSWEB 和无证书测试地址可正常使用。
-6. 只有软件确实需要云控时才索取云控地址和资料；普通本地软件不强制接入。
-7. 云端 URL 和公开 App Key 可存在客户端；App Secret、管理员密码、数据库密码、私钥和长期万能令牌不得进入客户端。
-8. 所有 Android APK 主要交付物必须已经签名、可直接安装，不得只交未签名 APK。
-9. 已有应用沿用原签名；新项目无签名时生成项目独立 release 签名，并将签名文件、别名、密码、证书指纹和备份说明放入私密交付包交给用户。
-10. 用户说“加固 APK”时，直接完成当前环境和项目兼容范围内能做到的最好加固；加固后使用同一份交付签名完成最终签名、安装和覆盖升级验证。
-11. App+网页双端默认交付已签名可安装 APK + 可部署网页版源码；网页+Android+PC 三端默认交付已签名可安装 APK + Windows EXE + 可部署网页版源码。
-12. 双端/三端开发先建立共享契约，设备端能处理的内容优先本地完成。
+4. 默认不强制首次登录改密，默认兼容 HTTP 和 HTTPS，只有确实需要时接入云控。
+5. 所有 Android APK 主要交付物必须已经签名、可直接安装；已有应用沿用原签名，新项目签名文件私密交付给用户。
+6. 用户说“加固 APK”时，直接完成当前环境和项目兼容范围内能做到的最好加固，并使用同一份交付签名完成最终签名和升级验证。
+7. 修 Bug 前必须先复现、读取完整错误与日志、追踪根因；每轮只验证一个假设，不得堆叠猜测性补丁。
+8. 同一问题连续三次修复失败后必须停止盲修，提交阶段报告并复查架构、状态、依赖和环境。
+9. 没有当前版本的新鲜验证证据，不得宣称“已修复”；必须验证原始复现、完整构建、安装/部署和关联回归。
+10. App+网页双端默认交付已签名可安装 APK + 可部署网页版源码；网页+Android+PC 三端默认交付已签名可安装 APK + Windows EXE + 可部署网页版源码。
 
-来源与参考项目见 `SOURCE_NOTICE.md`，版本变化见 `CHANGELOG.md`。
+来源与参考项目见 `SOURCE_NOTICE.md`，调试来源许可见 `testing-debugging/SOURCE_NOTICE.md`，版本变化见 `CHANGELOG.md`。
