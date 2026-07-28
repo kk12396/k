@@ -12,7 +12,7 @@
 | Android App | `android-app/SKILL.md` |
 | App+网页双端或网页+Android+PC 三端 | `multi-platform-contract/SKILL.md` |
 | 登录、权限、上传、支付、后台、密钥、云控或公开接口 | `security-audit/SKILL.md` 与 `security-audit/PRE_DEVELOPMENT_CHECKLIST.md` |
-| 报错、闪退、卡顿、功能异常 | `testing-debugging/SKILL.md` |
+| 报错、闪退、卡顿、构建/安装失败、功能异常或连续修复失败 | `testing-debugging/SKILL.md`；深层调用同时读 `ROOT_CAUSE_TRACING.md`；宣布修复前读 `VERIFICATION_GATE.md` |
 | 更新旧项目、数据库变化、安装包和版本交付 | `release-migration/SKILL.md` |
 
 ## 开发前一次性确认
@@ -39,6 +39,9 @@
 8. 加固中的签名校验、防篡改校验必须绑定同一份已交付给用户的项目签名证书，不能绑定 AI 自己保留或用户拿不到的签名。用户以后必须能使用同一签名文件继续发布升级包。
 9. 新项目没有现成签名时，生成一份项目独立签名文件并私下随交付包提供：签名文件、别名、密码、证书指纹和备份说明。不得只交临时测试签名 APK，也不得把签名文件提交到公开源码仓库。
 10. 未实际构建、签名、安装、部署、加固或测试的内容，必须标记未验证，不得宣称已完成。
+11. 修复任何 Bug 前必须先复现、收集完整错误和日志、追踪根因，再提出修复；每轮只验证一个明确假设，禁止一次堆叠多个猜测性补丁。
+12. 同一问题连续三次修复失败后必须停止盲修，输出 `testing-debugging/BUG_SESSION_REPORT.md` 格式的阶段报告，复查架构、共享状态、依赖和环境；未经说明不得继续第4轮补丁。
+13. 宣布“已修复”前必须执行当前版本的新鲜验证：原始复现、完整构建、安装/部署及关联回归。没有证据只能写“已修改，未验证”，不得使用“应该可以”。
 
 ## UI Skill
 
@@ -51,3 +54,5 @@ https://raw.githubusercontent.com/kk12396/k/main/ui-style-library/SKILL.md
 ## 推荐执行顺序
 
 一次性版本/后台/必要云控与签名确认 → 读取专项 Skill → 功能矩阵/设计系统/API 契约 → 实现 → 单端测试 → 跨端联调 → 安全检查 → 迁移与升级验证 → APK加固、最终签名与安装验证 → 最终验收与交付。
+
+遇到 Bug 时改为：保护现场 → 完整复现与取证 → 反向追踪根因 → 单一假设最小实验 → 根因修复 → 新鲜验证证据 → 交付报告。
