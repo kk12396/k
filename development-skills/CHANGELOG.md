@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v1.3.4 - 2026-07-30
+
+### Android 固定版本矩阵
+
+- 最低支持固定为 Android 6.0 / API23，`minSdk=23`。
+- 目标版本固定为 Android 16 / API36，`targetSdk=36`。
+- 编译版本固定为 Android 16 / API36，`compileSdk=36`。
+- 最高支持不设限制，禁止配置 `maxSdkVersion`；同时检查源码、第三方依赖和最终合并 Manifest，避免依赖意外带入最高版本限制。
+- 构建环境必须具备 Android SDK Platform 36 和兼容 AGP/Gradle/JDK 或 Flutter 工具链，不得静默降级到 API35 或更低版本。
+- 高版本接口继续保持 API23 版本判断、兼容层和降级处理；依赖、JNI/so、Flutter插件和第三方加固工具必须同时兼容 API23 与 API36。
+- 目标 API36 的权限、后台运行、通知、存储、前台服务、安全和边到边显示行为必须实际适配，不能只修改 Gradle 数字。
+- 发布及加固后必须验证 API23、API36、最终签名、覆盖升级和合并 Manifest 无 `maxSdkVersion`。
+- Android Skill、INDEX、完整个性化指令、发布迁移 Skill、README 和 VERSION 已同步升级。
+
 ## v1.3.3 - 2026-07-30
 
 ### Android API 兼容基线
