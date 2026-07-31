@@ -1,0 +1,167 @@
+name: XuanJia v1.2.2 Public Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ build/xuanjia-v1.2.2 ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: xuanjia-v122-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout public build carrier
+        uses: actions/checkout@v4
+
+      - name: Reconstruct and verify source payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat xuanjia-ci/payload/part-* | base64 --decode > /tmp/xuanjia-v1.2.2.zip
+          echo '944da3dfbc398715390b0a5ef931a9a63c978d71df2df2ef428e97c7ee2f8364  /tmp/xuanjia-v1.2.2.zip' | sha256sum -c -
+          unzip -t /tmp/xuanjia-v1.2.2.zip
+          mkdir -p xuanjia-build
+          unzip -oq /tmp/xuanjia-v1.2.2.zip -d xuanjia-build
+          grep -q "versionCode 122" xuanjia-build/app/build.gradle
+          grep -q "versionName '1.2.2'" xuanjia-build/app/build.gradle
+          test ! -e xuanjia-build/app/src/main/assets/test_signer.p12.b64
+          test -s xuanjia-build/app/src/androidTest/assets/test_signer.p12.b64
+
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
+          sudo apt-get clean
+          df -h /
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Install Android 16 and Native toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort | tail -n 1)"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" \
+            'platforms;android-36' \
+            'build-tools;36.0.0' \
+            'ndk;27.0.12077973' \
+            'cmake;3.22.1'
+
+      - name: Fetch APKEditor engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p xuanjia-build/app/libs
+          curl --fail --location --retry 3 \
+            'https://github.com/REAndroid/APKEditor/releases/download/V1.4.9/APKEditor-1.4.9.jar' \
+            --output xuanjia-build/app/libs/APKEditor.jar
+          test -s xuanjia-build/app/libs/APKEditor.jar
+
+      - name: Generate guard DEX and four-ABI Native vault
+        shell: bash
+        working-directory: xuanjia-build
+        run: bash scripts/generate_guard_asset.sh
+
+      - name: Static verification gate
+        shell: bash
+        working-directory: xuanjia-build
+        run: bash scripts/self_check.sh
+
+      - name: Compile release and Android tests
+        shell: bash
+        working-directory: xuanjia-build
+        run: gradle :app:assembleRelease :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+
+      - name: Sign and verify installable APK
+        shell: bash
+        working-directory: xuanjia-build
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/release
+          UNSIGNED='app/build/outputs/apk/release/app-release-unsigned.apk'
+          test -s "$UNSIGNED"
+          base64 --decode app/src/androidTest/assets/test_signer.p12.b64 > /tmp/xuanjia-release.p12
+          ZIPALIGN="$ANDROID_HOME/build-tools/36.0.0/zipalign"
+          APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          "$ZIPALIGN" -f -p 4 "$UNSIGNED" artifacts/release/XuanJiaProtector_v1.2.2-aligned.apk
+          "$APKSIGNER" sign \
+            --ks /tmp/xuanjia-release.p12 --ks-type PKCS12 \
+            --ks-key-alias xuanyi --ks-pass pass:123456 --key-pass pass:123456 \
+            --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
+            --out artifacts/release/XuanJiaProtector_v1.2.2.apk \
+            artifacts/release/XuanJiaProtector_v1.2.2-aligned.apk
+          rm -f artifacts/release/XuanJiaProtector_v1.2.2-aligned.apk /tmp/xuanjia-release.p12
+          "$APKSIGNER" verify --verbose --print-certs artifacts/release/XuanJiaProtector_v1.2.2.apk \
+            | tee artifacts/release/APP_SIGNATURE.txt
+          grep -q 'Verified using v2 scheme.*true' artifacts/release/APP_SIGNATURE.txt
+          grep -q 'Verified using v3 scheme.*true' artifacts/release/APP_SIGNATURE.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging artifacts/release/XuanJiaProtector_v1.2.2.apk \
+            | tee artifacts/release/APK_BADGING.txt
+          grep -q "package: name='com.xuanyi.protector'" artifacts/release/APK_BADGING.txt
+          grep -q "versionCode='122'" artifacts/release/APK_BADGING.txt
+          grep -q "versionName='1.2.2'" artifacts/release/APK_BADGING.txt
+          grep -q "sdkVersion:'23'" artifacts/release/APK_BADGING.txt
+          grep -q "targetSdkVersion:'36'" artifacts/release/APK_BADGING.txt
+          unzip -l artifacts/release/XuanJiaProtector_v1.2.2.apk | tee artifacts/release/APK_CONTENTS.txt
+          ! grep -q 'test_signer.p12' artifacts/release/APK_CONTENTS.txt
+          sha256sum artifacts/release/XuanJiaProtector_v1.2.2.apk | tee artifacts/release/SHA256SUMS.txt
+          cat > artifacts/release/BUILD_REPORT.txt <<'REPORT'
+          Product: XuanJia Protector
+          Version: 1.2.2 (122)
+          minSdk: 23 / Android 6.0
+          targetSdk: 36 / Android 16
+          Custom output signer: mandatory
+          Compatibility mode: engine-independent ZIP rebuild and custom re-sign
+          Standard/enhanced: internal code URL protection only
+          Resource/UI-visible text: not encrypted
+          Enhanced engine failure: rollback privacy rewrite and continue stable fallback
+          Release compile: passed
+          Android test compile: passed
+          V2/V3 APK signature verification: passed
+          Production APK contains no bundled target-signing private key.
+          REPORT
+
+      - name: Prepare source package
+        shell: bash
+        working-directory: xuanjia-build
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/source/XuanJiaProtector_v1.2.2_source
+          rsync -a \
+            --exclude '.git/' \
+            --exclude 'app/build/' \
+            --exclude 'guard-runtime/build/' \
+            --exclude 'app/libs/APKEditor.jar' \
+            --exclude 'artifacts/' \
+            --exclude 'app/src/androidTest/assets/test_signer.p12.b64' \
+            ./ artifacts/source/XuanJiaProtector_v1.2.2_source/
+          (cd artifacts/source && zip -qr ../release/XuanJiaProtector_v1.2.2_source.zip XuanJiaProtector_v1.2.2_source)
+          unzip -t artifacts/release/XuanJiaProtector_v1.2.2_source.zip
+
+      - name: Upload verified release
+        uses: actions/upload-artifact@v4
+        with:
+          name: XuanJiaProtector-v1.2.2-release
+          path: xuanjia-build/artifacts/release/**
+          if-no-files-found: error
+          retention-days: 30
