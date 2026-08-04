@@ -1,12 +1,20 @@
-# 玄忆工作室开发 Skills v1.3.4
+# 玄忆工作室开发 Skills v1.3.5
 
 一套面向正式网站、Android App、Windows 客户端、插件、后台及双端/三端项目的模块化开发规则。
+
+## ChatGPT 推荐用法
+
+- 个性化自定义指令使用仓库中的“稳定版”，核心规则直接写在指令内。
+- 不再要求每次新对话都强制访问 GitHub 或 Raw 地址，避免网络策略阻断正常开发。
+- GitHub INDEX 与各 Skill 仅在复杂任务、专项规则确实需要且当前环境可访问时读取。
+- 外部访问失败时直接按核心指令继续，不反复搜索，也不连续提示“读取失败”。
+- 更稳定的长期方案是把 INDEX 和常用 Skill 上传到 ChatGPT Project 作为参考文件，并在 Project 中使用项目指令。
 
 ## 主入口
 
 - GitHub：https://github.com/kk12396/k/blob/main/development-skills/INDEX.md
 - Raw：https://raw.githubusercontent.com/kk12396/k/main/development-skills/INDEX.md
-- 完整个性化自定义指令：https://github.com/kk12396/k/blob/main/development-skills/CUSTOM_INSTRUCTION_SNIPPET.md
+- 稳定版个性化自定义指令：https://github.com/kk12396/k/blob/main/development-skills/CUSTOM_INSTRUCTION_SNIPPET.md
 - 开发前确认清单：https://github.com/kk12396/k/blob/main/development-skills/security-audit/PRE_DEVELOPMENT_CHECKLIST.md
 
 ## 模块
@@ -27,23 +35,19 @@
 - [完成前验证门禁](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/VERIFICATION_GATE.md)
 - [连续失败阶段报告模板](https://github.com/kk12396/k/blob/main/development-skills/testing-debugging/BUG_SESSION_REPORT.md)
 
-调试规则参考 `obra/superpowers` 的 Systematic Debugging、Root Cause Tracing 与 Verification Before Completion，并针对 Android、PHP/MySQL、KSWEB、APK签名/加固和双/三端联调重新编写。
+## v1.3.5 固定规则
 
-## v1.3.4 固定规则
-
-1. Android 固定 `minSdk=23`，最低支持 Android 6.0 / API23。
-2. Android 固定 `targetSdk=36`、`compileSdk=36`，目标和编译版本均为 Android 16 / API36。
-3. 不设置 `maxSdkVersion`，最高支持不设限制；源码、依赖和最终合并 Manifest 均须检查。
-4. 构建环境必须补齐 Android SDK Platform 36 和兼容工具链，不得静默降低目标或编译版本；依赖不得静默提高最低版本。
-5. 交付前验证 API23 与 API36；缺少实测环境时明确标记未验证。
-6. 包含网页时只问“新版还是旧版”：新版=PHP8.2+MySQL8.0；旧版=PHP7.4+MySQL5.6/5.7，并默认按安卓手机 KSWEB 测试兼容处理。
-7. 包含后台时只问“自用还是经典”：自用=`/adminsc + admincs/asd.cc`；经典=`/admin + admin/123456`。
-8. 默认不强制首次登录改密，默认兼容 HTTP 和 HTTPS，只有确实需要时接入云控。
-9. 所有网站安装器必须提供可编辑的数据库表前缀；全站统一解析表名，禁止硬编码完整表名，旧站升级沿用原前缀。
-10. 所有 Android APK 主要交付物必须已经签名、可直接安装；已有应用沿用原签名，新项目签名文件私密交付给用户。
-11. 用户说“加固 APK”时，直接完成当前环境和项目兼容范围内能做到的最好加固，并使用同一份交付签名完成最终签名、API23/API36和升级验证。
-12. 修 Bug 前必须先复现、读取完整错误与日志、追踪根因；每轮只验证一个假设，不得堆叠猜测性补丁。
-13. 同一问题连续三次修复失败后必须停止盲修；没有当前版本的新鲜验证证据，不得宣称“已修复”。
-14. App+网页双端默认交付已签名可安装 APK + 可部署网页版源码；网页+Android+PC 三端默认交付已签名可安装 APK + Windows EXE + 可部署网页版源码。
+1. GitHub 规则改为按需读取，不再作为每次新对话的强制网络前置条件。
+2. 外部访问失败时继续执行，不反复提示网络策略问题；用户本次要求优先。
+3. Android 固定 `minSdk=23`、`targetSdk=36`、`compileSdk=36`，不设置 `maxSdkVersion`。
+4. 网站安装器允许自定义数据库表前缀，旧站升级沿用原前缀。
+5. 网页环境：新版 PHP8.2+MySQL8.0；旧版 PHP7.4+MySQL5.6/5.7并兼容KSWEB。
+6. 后台：自用 `/adminsc + admincs/asd.cc`；经典 `/admin + admin/123456`。
+7. 默认兼容 HTTP/HTTPS，不强制改密；云控按需接入。
+8. Android APK 必须已签名可安装，已有项目沿用原签名，新项目签名私密交付。
+9. 用户要求加固 APK 时直接执行当前环境可实现的最佳兼容加固。
+10. 修 Bug 必须先复现和追根因，每轮只验证一个假设；三次失败后停止盲修。
+11. 没有当前版本的新鲜验证证据，不得宣称修复或交付完成。
+12. App+网页默认交付已签名 APK + 可部署网页版源码；三端另交 Windows EXE。
 
 来源与参考项目见 `SOURCE_NOTICE.md`，调试来源许可见 `testing-debugging/SOURCE_NOTICE.md`，版本变化见 `CHANGELOG.md`。
